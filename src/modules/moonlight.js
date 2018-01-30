@@ -1,7 +1,11 @@
-import { Map, List } from 'immutable';
+import { Map, List, fromJS } from 'immutable';
 import { createAction, handleActions } from 'redux-actions';
 import axios from 'axios';
 
+const GET_STATUS = "MOONLIGHT/GET_STATUS";
+const GET_STATUS_LOADING = "MOONLIGHT/GET_STATUS_LOADING";
+const GET_STATUS_SUCCESS = "MOONLIGHT/GET_STATUS_SUCCESS";
+const GET_STATUS_FAILURE = "MOONLIGHT/GET_STATUS_FAILURE";
 const GET_HOSTS = "MOONLIGHT/GET_HOSTS";
 const GET_HOSTS_LOADING = "MOONLIGHT/GET_HOSTS_LOADING"
 const GET_HOSTS_SUCCESS = "MOONLIGHT/GET_HOSTS_SUCCESS"
@@ -20,7 +24,8 @@ const START_GAME_SUCCESS = "MOONLIGHT/START_GAME_SUCCESS"
 const START_GAME_FAILURE = "MOONLIGHT/START_GAME_FAILURE"
 
 const initialState = Map({
-    histList: Map({
+    status:'INIT',
+    hostList: Map({
         status: 'INIT',
         data: List([])
     }),
@@ -34,10 +39,20 @@ const initialState = Map({
     }),
     newHost: Map({
         status: 'INIT',
-        data: List([]),
         pairingNum: '' //it's not used for now
     })
 })
+
+function getStatusApiRequest(userId){
+    console.log("AAAAAAA" + userId);
+    return axios.post('/api/moonlight/getStatus', {userId})
+        .then(res=>{
+            if(res.data.error){
+                return Promise.reject(res.data.error);
+            }
+            return Promise.resolve(res.data)
+        })
+}
 
 function getHostApiRequest(userId){
     return axios.post('/api/moonlight/gethosts', {userId})
@@ -57,6 +72,9 @@ function getHostApiRequest(userId){
 function getAppsApiRequest(userId, hostId){
     return axios.post('/api/moonlight/getapps', {userId, hostId})
         .then(res=>{
+            if (res.data.error) {
+                return Promise.reject(res.data.error);
+            }
             return Promise.resolve(res.data);
         })
         .catch(err=>{
@@ -67,6 +85,10 @@ function getAppsApiRequest(userId, hostId){
 function addHostApiRequest(userId, hostIp, pairingNum){
     return axios.post('/api/moonlight/addhost', {userId, hostIpaddress: hostIp, pairingNum})
         .then(res=>{
+            if (res.data.error) {
+                return Promise.reject(res.data.error);
+            }
+
             return Promise.resolve(JSON.parse(res.data));
         })
         .catch(err=>{
@@ -77,12 +99,20 @@ function addHostApiRequest(userId, hostIp, pairingNum){
 function startGameApiRequest(userId, hostId, appId, option){
     return axios.post('/api/moonlight/startgame', {userId, hostId, appId, option})
         .then(res=>{
+            if (res.data.error) {
+                return Promise.reject(res.data.error);
+            }
             return Promise.resolve(appId);
         })
         .catch(err=>{
             return Promise.reject(err);
         })
 }
+
+export const getStatusRequest = (userId)=>({
+    type:GET_STATUS,
+    payload: getStatusApiRequest(userId)
+})
 
 export const getHostRequest = (userId)=>({
     type: GET_HOSTS,
@@ -105,16 +135,28 @@ export const startGameRequest = (userId, hostId, appID, option)=>({
 })
 
 export default handleActions({
+    [GET_STATUS_LOADING]: (state, action)=>{
+        return state.set('status', 'WAITING')
+    },
+
+    [GET_STATUS_SUCCESS]: (state, action)=>{
+        return state.set('status', 'ONLINE')
+    },
+
+    [GET_STATUS_FAILURE]: (state, action)=>{
+        return state.set('status', 'OFFLINE')
+    },
+
     [GET_HOSTS_LOADING]: (state, action)=>{
         return state.setIn(['hostList', 'status'], 'WAITING');        
     },
 
     [GET_HOSTS_SUCCESS]: (state, action)=>{
-        return state.set('hostList', Map({status: 'GET_SUCCESS', data: List(action.payload.list)}))
+        return state.set('hostList', Map({status: 'GET_SUCCESS', data: fromJS(action.payload.list)}))
     },
 
     [GET_HOSTS_FAILURE]: (state, action)=>{
-        return state.set('hostList', Map({status: 'GET_FAILURE', data: List(action.payload)}))
+        return state.set('hostList', Map({status: 'GET_FAILURE', data: fromJS(action.payload)}))
     },
 
     [GET_APPS_LOADING]: (state, action)=>{
@@ -122,7 +164,7 @@ export default handleActions({
     },
 
     [GET_APPS_SUCCESS]: (state, action)=>{
-        return state.set('appList', Map({status: 'SUCCESS', data: List(action.payload.appList)}))
+        return state.set('appList', Map({status: 'SUCCESS', data: fromJS(action.payload.appList)}))
     },
 
     [GET_APPS_FAILURE]: (state, action)=>{
@@ -131,13 +173,12 @@ export default handleActions({
 
     [ADD_HOST_LOADING]: (state, action)=>{    ////////?////////
         return state.setIn(['hostList', 'status'],'ADD_WAITING')
-                //.setIn(['newHost', 'pairingNum'], action.payload);
+                .setIn(['newHost', 'pairingNum'], action.payload);
     },
 
     [ADD_HOST_SUCCESS]: (state, action)=>{
         const hostListData = state.getIn(['hostList','data'])
-        return state.set('hostList', Map({status: 'ADD_SUCCESS',data: hostListData.push(action.payload)}))
-                    .setIn(['newHost', 'data'], action.payload);
+        return state.set('hostList', Map({status: 'ADD_SUCCESS',data: hostListData.push(fromJS(action.payload))}))
     },
 
     [ADD_HOST_FAILURE]: (state, action)=>{

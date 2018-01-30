@@ -1,8 +1,7 @@
 
-import {Map, List} from 'immutable';
+import {Map, List, fromJS} from 'immutable';
 import {createAction, handleActions} from 'redux-actions';
 import axios from 'axios';
-import { take, put, call, fork, select, all } from 'redux-saga/effects'
 
 const LOGIN = "AUTH/LOGIN";
 const LOGIN_LOADING = 'AUTH/LOGIN_LOADING';
@@ -26,7 +25,7 @@ const initialState = Map({
     }),
     status: Map({
         valid: false,
-        isLoggedInL: false,
+        isLoggedIn: false,
         currentUser: ''
     })
 });
@@ -45,7 +44,7 @@ function registerApiRequest(userId, password){
 
 function getStatusApiRequest(){
     return axios.get('/api/account/getinfo')
-            .then((res)=>(Promise.resolve(res.data.info.username)))
+            .then((res)=>(Promise.resolve(res.data.info.userId)))
             .catch(err=>(Promise.reject()))
 }
 
@@ -80,7 +79,7 @@ export default handleActions({
 
     [LOGIN_SUCCESS]: (state, action)=>{
         return state.setIn(['login', 'status'], 'SUCCESS')
-                    .mergeIn(['status'], {isLoggedIn: true, currentUser: action.payload});
+                    .mergeIn(['status'], Map({isLoggedIn: true, currentUser: action.payload}));
     },
 
     [LOGIN_FAILURE]: (state, action)=>{
@@ -88,7 +87,7 @@ export default handleActions({
     },
 
     [REGISTER_LOADING]: (state, action)=>{
-        return state.mergeIn(['register'], {status: 'WAITING', error: -1});
+        return state.mergeIn(['register'], Map({status: 'WAITING', error: -1}));
     },
 
     [REGISTER_SUCCESS]: (state, action)=>{
@@ -96,7 +95,7 @@ export default handleActions({
     },
 
     [REGISTER_FAILURE]: (state, action)=>{
-        return state.mergeIn(['register'], {status: 'FAILURE', error: action.payload});
+        return state.mergeIn(['register'], Map({status: 'FAILURE', error: action.payload}));
     },
 
     [GET_STATUS_LOADING]: (state, action)=>{
@@ -104,15 +103,15 @@ export default handleActions({
     },
 
     [GET_STATUS_SUCCESS]: (state, action)=>{
-        return state.mergeIn(['status'], {valid: true, currentUser: action.payload})
+        return state.mergeIn(['status'], Map({valid: true, currentUser: action.payload}))
     },
 
     [GET_STATUS_FAILURE]: (state, action)=>{
-        return state.mergeIn(['status'], {valid: false, isLoggedIn: false});
+        return state.mergeIn(['status'], Map({valid: false, isLoggedIn: false}));
     },
 
     [LOGOUT]: (state, action)=>{
-        return state.mergeIn(['status'], {isLoggedIn: false, currentUser: ''});
+        return state.mergeIn(['status'], Map({isLoggedIn: false, currentUser: ''}));
     }
 
 }, initialState)

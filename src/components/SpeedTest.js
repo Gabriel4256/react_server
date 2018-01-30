@@ -1,6 +1,8 @@
 import React from 'react';
 
-const SpeedTest = (props)=>(
+const SpeedTest = (props)=>{
+	props = props.toJS();
+	return(
 	<div>
 		{props.status}
 		<form>
@@ -27,5 +29,6 @@ const SpeedTest = (props)=>(
 			</ul>
 		: undefined}
 	</div>
-)
+	)
+}
 export default SpeedTest

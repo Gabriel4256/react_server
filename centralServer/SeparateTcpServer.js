@@ -124,12 +124,12 @@ serverForWebServer.on('connection', function(socket){
 		getMLSocket(data.userId).then((socketForML)=>{
 			if(!socketForML){
 				console.log("ML of " + userId + " is offline");
-				return;
+				return sendMsg(socketForWebServer, {error: -1, status: false});
 			}
 			console.log(data.command);
 			if(data.command.slice(-5, ) === "TO_ML"){
 				switch(data.command){
-					
+
 					case "getHosts_TO_ML":
 						console.log('request from ' + userId + ": getting hosts");
 						sendMsg(socketForML, {command: "getHosts", userID: userId});
@@ -160,6 +160,10 @@ serverForWebServer.on('connection', function(socket){
 						console.log("Invalid command from WebServer");
 						break;
 				}
+			}
+			else if(data.command == "checkStatus"){
+				console.log('request from ' + userId + ": checking moonlight status");
+				sendMsg(socketForWebServer, { command: "checkStatus", status: true, userID: userId});
 			}		
 		}).catch((err)=>{
 			console.log("Something broken while getting ML Socket from db: " + err);

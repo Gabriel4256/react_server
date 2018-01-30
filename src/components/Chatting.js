@@ -2,7 +2,7 @@ import React from 'react';
 import update from 'react-addons-update';
 import io from 'socket.io-client';
 import {connect} from 'react-redux';
-import {getStatusRequest} from 'actions/authentication';
+import {getStatusRequest} from 'modules/authentication';
 
 var socket=null;
 
@@ -37,8 +37,8 @@ class Chatting extends React.Component{
 	render(){
 		return(
 			<div>
-				<UserList users={this.props.users}/>
-				<MessageList messages={this.state.messages}/>
+				<UserList users={this.props.users.toJS()}/>
+				<MessageList messages={this.props.messages.toJS()}/>
 				{this.props.currentUser?
 				<MessageForm onMessageSubmit={this.props.onMessageSubmit}
 							 user={this.props.currentUser}/>

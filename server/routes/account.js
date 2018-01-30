@@ -3,24 +3,41 @@ import orientDB from 'orientjs';
 import session from 'express-session';
 import request from 'request';
 
+var isConnectedToDB = false;
+var db = null;
+
 const router = express.Router();
-const server =  orientDB({
-	host: "localhost",
-	port: 2424,
-	username: 'root',
-	password: 'ssh2159'
-});
 router.use(session({
-    secret: '1234234',
-    resave: false,
-    saveUninitialized: true
+	secret: '1234234',
+	resave: false,
+	saveUninitialized: true
 }));
-const db = server.use('usersinfo');
+function connectToDB(){
+	try{
+		const server =  orientDB({
+			host: "localhost",
+			port: 2424,
+			userId: 'root',
+			password: 'ssh2159'
+		});
+		db = server.use('usersinfo');
+		isConnectedToDB = true;
+		console.log("Successfullly connected to db server");
+	}
+	catch(err){
+		console.log("err connecting to orientdb server: "  + err);
+		isConnectedToDB = false;
+	}
+	finally{
+		if(!isConnectedToDB){connectToDB();}
+	}
+}
+connectToDB();
 
 router.post('/signup', (req, res)=>{
-	let usernameRegex = /^[a-z0-9]+$/;
+	let userIdRegex = /^[a-z0-9]+$/;
 
-	if(!usernameRegex.test(req.body.id)){
+	if(!userIdRegex.test(req.body.id)){
 		return res.status(400).json({
 			error: "BAD USERNAME",
 			code: 1
@@ -34,7 +51,7 @@ router.post('/signup', (req, res)=>{
 		});
 	}
 
-	db.query("SELECT * FROM User WHERE id='" + req.body.username + "'").then((exist)=>{
+	db.query("SELECT * FROM User WHERE id='" + req.body.userId + "'").then((exist)=>{
 		if(exist.length !== 0){
 			return res.status(400).json({
 				error: "USERNAME EXiSTS",
@@ -44,13 +61,18 @@ router.post('/signup', (req, res)=>{
 		console.log(req.body);
 		db.class.get('User').then((user)=>{
 			user.create({
-				id: req.body.username,
+				id: req.body.userId,
 				password: req.body.password
 			}).then((new_user)=>{
 				console.log('created record: ' + new_user.id);
 				return res.json({success: true});			
 			});
 		});
+	}).catch(err=>{
+		return res.status(404).json({
+			error: "DB NOT CONNECTED",
+			code: 4
+		})
 	})
 });
 
@@ -63,7 +85,7 @@ router.post('/signin', (req, res)=>{
 		});
 	}
 
-	db.query("SELECT * FROM User WHERE id='" + req.body.username + "'").then((exist)=>{
+	db.query("SELECT * FROM User WHERE id='" + req.body.userId + "'").then((exist)=>{
 		if(!exist[0]){
 			return res.status(401).json({
 				error: "LOGIN FAILED",
@@ -79,13 +101,18 @@ router.post('/signin', (req, res)=>{
 		}
 
 		req.session.loginInfo = {
-			username: exist[0].id
+			userId: exist[0].id
 		};
-		console.log("session saved: " + req.session.loginInfo.username); 
+		console.log("session saved: " + req.session.loginInfo.userId); 
 
 		return res.json({
 			success: true
 		});
+	}).catch(err => {
+		return res.status(404).json({
+			error: "DB NOT CONNECTED",
+			code: 4
+		})
 	});
 });
 

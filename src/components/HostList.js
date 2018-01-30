@@ -16,7 +16,7 @@ class HostList extends React.Component{
 
 			<div>
 			{	
-				(this.props.hostList)?
+				(this.props.hostList.map)?
 
 				this.props.hostList.map((host, i)=>{
 					return <div key={i}>

@@ -21,7 +21,7 @@ const StreamingList = props => {
             </div>
             <div id="streams">
             {props.streamingList?
-            props.streamingList.map((stream, i)=>{
+            props.streamingList.toJS().map((stream, i)=>{
                 return 
                 (<div key={i}>
                     <li><Link to={props.getStreamLink(stream.name)}>

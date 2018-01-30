@@ -26,7 +26,9 @@ class Authentication extends React.Component {
 					})
 				}
 			}
-		)
+		).catch(err=>{
+			console.log(err);
+		})
 	}
 
 	handleRegister(){
@@ -42,7 +44,9 @@ class Authentication extends React.Component {
 					});
 				}
 			}
-		)
+		).catch(err => {
+			console.log(err);
+		})
 	}
 
 	handleChange(e){ 

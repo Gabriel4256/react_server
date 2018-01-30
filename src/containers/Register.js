@@ -2,7 +2,6 @@ import React from 'react';
 import {Authentication} from 'components';
 import {connect} from 'react-redux';
 import {registerRequest} from 'modules/authentication';
-import {browserHistory} from 'react-router';
 
 class Register extends React.Component {
 
@@ -16,7 +15,7 @@ class Register extends React.Component {
 			() => {
 				if(this.props.status === "SUCCESS"){
 					Materialize.toast("SUCCESS! Please log in", 2000);
-					browserHistory.push('/login');
+					this.props.history.push('/login');
 					return true;
 				} else{
 					let errorMessage = [
@@ -45,8 +44,8 @@ class Register extends React.Component {
 
 const mapStateToProps = (state) => {
 	return {
-		status: state.authentication.register.status,
-		errorCode: state.authentication.register.error
+		status: state.authentication.getIn(['register','status']),
+		errorCode: state.authentication.getIn(['register','error'])
 	};
 };
 

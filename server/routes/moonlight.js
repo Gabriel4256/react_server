@@ -3,7 +3,7 @@ import net from 'net';
 import axios from 'axios';
 
 const router = express.Router();
-var httpResponses = {getHosts: [], getApps: [], addHost: [], startGame:[]};
+var httpResponses = {status:{}, getHosts: {}, getApps: {}, addHost: {}, startGame:{}};
 
 var portForCentralServer = 4002;
 var socketForCentralServer;
@@ -43,28 +43,48 @@ connectToCentralServer();
 //		And when got one central server response, then handle all the http response 
 //		of same purpose. It doesn't seems like the best, but better.
 
+router.post('/getStatus', (req, res)=>{
+	sendMsgToCentralServerAndRegisterResHandler(res, { command: 'checkStatus', userId: req.body.userId });
+	if(!httpResponses.status[req.body.userId]){
+		httpResponses.status[req.body.userId] = [];
+	}
+	httpResponses.status[req.body.userId].push(res);
+})
+
 //get moonlight host list
 router.post('/gethosts', (req, res)=>{
 	sendMsgToCentralServerAndRegisterResHandler(res, {command: 'getHosts_TO_ML', userId: req.body.userId});
-	httpResponses.getHosts.push(res);
+	if (!httpResponses.getHosts[req.body.userId]) {
+		httpResponses.getHosts[req.body.userId] = [];
+	}	
+	httpResponses.getHosts[req.body.userId].push(res);
 });
 
 //get game list of the selected host
 router.post('/getapps', (req, res)=>{
 	sendMsgToCentralServerAndRegisterResHandler(res, {command: 'getApps_TO_ML', userId: req.body.userId, hostId: req.body.hostId});
-	httpResponses.getApps.push(res);
+	if (!httpResponses.getApps[req.body.userId]) {
+		httpResponses.getApps[req.body.userId] = [];
+	}	
+	httpResponses.getApps[req.body.userId].push(res);
 })
 
 //add new moonlight host
 router.post('/addhost', (req, res)=>{
 	sendMsgToCentralServerAndRegisterResHandler(res, {command: 'addHost_TO_ML', userId: req.body.userId, hostIpaddress: req.body.hostIpaddress, pairingNum: req.body.pairingNum});
-	httpResponses.addHost.push(res);
+	if (!httpResponses.addHost[req.body.userId]) {
+		httpResponses.addHost[req.body.userId] = [];
+	}	
+	httpResponses.addHost[req.body.userId].push(res);
 });
 
 //start the game of selected host
 router.post('/startgame', (req, res)=>{
 	sendMsgToCentralServerAndRegisterResHandler(res, {command: "startGame_TO_ML",userId: req.body.userId, appId: req.body.appId, hostId: req.body.hostId, option: req.body.option});
-	httpResponses.startGame.push(res);
+	if (!httpResponses.startGame[req.body.userId]) {
+		httpResponses.startGame[req.body.userId] = [];
+	}	
+	httpResponses.startGame[req.body.userId].push(res);
 });
 
 function sendMsgToCentralServerAndRegisterResHandler(res, msg){
@@ -81,17 +101,20 @@ function commandHandler(data){ //handler for data from central server
 	console.log("Receiver msg: " + data.command);
 	switch(data.command){
 
+		case "checkStatus":
+			iterativelySendResponse(httpResponses.status[data.userID], data);
+			break;
 		case "getHostsResult_TO_WEB":
-			iterativelySendResponse(httpResponses.getHosts, data);
+			iterativelySendResponse(httpResponses.getHosts[data.userID], data);
 			break;
 		case "addHostResult_TO_WEB":
-			iterativelySendResponse(httpResponses.addHost, data);
+			iterativelySendResponse(httpResponses.addHost[data.userID], data);
 			break;
 		case "getAppsResult_TO_WEB":
-			iterativelySendResponse(httpResponses.getApps, data);
+			iterativelySendResponse(httpResponses.getApps[data.userID], data);
 			break;
 		case "startGameResult_TO_WEB":
-			iterativelySendResponse(httpResponses.startGame, data);
+			iterativelySendResponse(httpResponses.startGame[data.userID], data);
 			break;
 		case "networkTest_TO_WEB":
 			axios.post('/api/speedtest').then((res)=>{

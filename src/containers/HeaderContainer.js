@@ -75,7 +75,6 @@ class HeaderContainer extends React.Component{
 				{isAuth ? undefined: <Header isLoggedIn={this.props.status.get('isLoggedIn')}
 												onLogout={this.handleLogout}/>}
 				{this.props.status.get('currentUser')}
-				{this.props.children}
 			</div>
 		);
 	}

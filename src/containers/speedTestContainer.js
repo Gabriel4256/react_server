@@ -3,6 +3,8 @@ import {connect} from 'react-redux';
 import {SpeedTest} from  'components';
 import PropTypes from 'prop-types';
 import { getSpeedRequest } from '../modules/speedTest';
+import { Map} from 'immutable'
+
 
 class speedTestContainer extends Component {
     constructor(props) {
@@ -15,7 +17,7 @@ class speedTestContainer extends Component {
         return this.props.getSpeedRequest()
             .then(()=>{
                 if(this.props.status === "SUCCESS"){
-                    this.setState({data:this.props.data.toJS()})
+                    this.setState({data:this.props.data})
                     return true;
                 }
                 return Promise.reject(false);

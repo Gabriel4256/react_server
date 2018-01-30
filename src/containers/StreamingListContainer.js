@@ -2,11 +2,13 @@ import React, { Component } from 'react';
 import StreamingList from 'components/StreamingList';
 import { connect } from 'react-redux';
 import {getStreamsRequest} from 'modules/stream';
+import { Map, List, fromJS } from 'immutable'
+
 
 class StreamingListContainer extends Component {
     constructor(props){
         super(props);
-        this.state = {streamingStatus: false, streamingList:[]}
+        this.state = {streamingStatus: false, streamingList:List([])}
         this.getStreams = this.getStreams.bind(this)
 
     }

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import io from 'socket.io-client';
 import {connect} from 'react-redux';
 import {getStatusRequest} from 'modules/authentication';
+import update from 'immutability-helper';
 
 var socket={};
 
@@ -24,7 +25,8 @@ class ChattingContainer extends Component {
             users: data,
             messages: [],
             text: [],
-            room: this.props.room
+            room: this.props.room,
+            currentUser: this.props.status.get('currentUser')
         });
     }
 
@@ -58,50 +60,46 @@ class ChattingContainer extends Component {
     }
 
     onReceiveMsg(msg) {
-        let { messages } = this.state;
-        messages.push(msg);
-        this.setState({ messages });
+        this.setState(update(this.state, {
+            messages: {$push : [msg]}    
+        }));
     }
 
     onUserJoin(data) {
         console.log('new user has joined');
-        this.setState(update(this.state, {
-            users: {
-                $push: [data.username]
-            },
-            messages: {
-                $push: [{ user: "APPLICATION BOT", text: data.username + " Joined" }]
-            }
-        }));
+        this.setState(update(this.state,{
+            users: {$push: [data.userId]},
+            messages: {$push: [{user: 'APPLICATION BOT', text: data.userId + " Joined"}]}
+        }))
     }
 
     onUserLeft(data) {
-        let index = this.state.users.indexOf(data.username);
-        this.setState(
-            update(this.state, {
-                users: {
-                    $splice: [[index, 1]]
-                },
-                messages: {
-                    $push: [{ user: 'APPLICATION BOT', text: data.username + ' Left' }]
-                }
-            })
-        );
+        let index = this.state.users.indexOf(data.userId);
+        this.setState(update(this.state,{
+            users: {
+                $splice: [[index, 1]]
+            },
+            messages: {
+                $push: [{user: 'APPLICATION BOT', text: data.userId + ' Left'}]
+            }
+        }))
     }
 
     handleMessageSubmit(msg) {
-        let { messages } = this.state;
-        messages.push(msg);
-        this.setState({ messages });
+        onReceiveMsg(msg);
         socket.emit('send:message', { msg: msg, room: this.props.room });
-    }   
+    } 
 
     getStatus(){
         return this.props.getStatusRequest()
                 .then(()=>{
                    if(this.props.status.get('valid')){
-                       this.setState({...this.state, currentUser: this.props.status.get('currentUser')})
-                       return true;
+                       this.setState(update(this.state, {
+                           currentUser: {
+                               $set: this.props.status.get('currentUser')
+                           }
+                       }))
+                       return this.state.currentUser;
                    }
                    return Promise.reject(false);
                 })
@@ -110,9 +108,9 @@ class ChattingContainer extends Component {
     render() {
         return (
             <div>
-                <Chatting room={this.state.room}
-                          users={this.state.users}
-                          messages={this.state.messages}
+                <Chatting room={this.state.get('room')}
+                          users={this.state.get('users')}
+                          messages={this.state.get('messages')}
                           onMessageSubmit={this.handleMessageSubmit}
                           currentUser={this.props.currentUser}
                           connect={this.connectToIoServer}
@@ -123,7 +121,6 @@ class ChattingContainer extends Component {
             </div>
         );
     }
-
 }
 
 const mapStateToProps = (state)=>{

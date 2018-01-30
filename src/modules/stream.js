@@ -1,4 +1,4 @@
-import { Map, List } from 'immutable';
+import { Map, List, fromJS} from 'immutable';
 import { createAction, handleActions } from 'redux-actions';
 import axios from 'axios';
 
@@ -41,7 +41,7 @@ export default handleActions({
     },
     [GET_STREAMS_SUCCESS]: (state, action)=>{
         return state.set('status', 'SUCCESS')
-                    .set('streamList', List(action.payload))
+                    .set('streamList', fromJS(action.payload))
     },
     [GET_STREAMS_FAILURE]: (action, state)=>{
         return state.set('status', 'FAILURE')

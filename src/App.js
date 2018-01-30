@@ -1,6 +1,6 @@
 import React from 'react';
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
-import {HeaderContainer, Login, Register, StreamingListContainer, StreamingView, Moonlight, SpeedTestContainer} from 'containers';
+import {HeaderContainer, Login, Register, StreamingListContainer, StreamingView,SpeedTestContainer, MoonlightContainer} from 'containers';
 import {Payment} from './components';
 import {Provider} from 'react-redux';
 //import {createStore, applyMiddleWare} from 'redux';
@@ -17,7 +17,7 @@ const App = ()=>(
             <Route path="/login" component={Login} />
             <Route path="/register" component={Register} />
             <Route path="/player/:streamname"  component={StreamingView}/>
-            <Route path="/moonlight" component={Moonlight} />
+            <Route path="/moonlight" component={MoonlightContainer} />
             <Route path="/pay" component={Payment} />
             <Route path="/speedtest" component={SpeedTestContainer}/>
         </Switch> 

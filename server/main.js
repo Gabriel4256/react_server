@@ -29,8 +29,8 @@ const io = socket_io.listen(server);
 
 app.use(morgan('dev'));
 app.use(bodyParser.json());
-app.use('/', express.static(path.join(__dirname, './../public')));
 app.use('/api', api);
+app.use('/', express.static(path.join(__dirname, './../public')));
 app.get('*', (req, res)=>{
     res.sendFile(path.resolve(__dirname, './../public/index.html'));
 });
@@ -67,7 +67,7 @@ io.sockets.on('connection', (socket) =>{
     socket.on('user:join', (data)=>{
         console.log(data + " has joined");
         makeRoom(data.room);
-        if(usersinfo[data.username]){
+        if(usersinfo[data.userId]){
             leftRoom(socket, data);
         }
         joinRoom(socket, data);
@@ -93,20 +93,20 @@ function makeRoom(room){ //TODO: Change the way of storing the information => db
 }
 
 function leftRoom(socket, data){
-    let prevroom = usersinfo[data.username];
-    console.log(data.username + " has left from " + prevroom);
-    rooms[prevroom].splice(rooms[prevroom].indexOf(data.username), 1);
-    usersinfo[data.username]='';
+    let prevroom = usersinfo[data.userId];
+    console.log(data.userId + " has left from " + prevroom);
+    rooms[prevroom].splice(rooms[prevroom].indexOf(data.userId), 1);
+    usersinfo[data.userId]='';
     socket.leave(prevroom);
-    socket.broadcast.to(prevroom).emit('user:left', {username: data.username});
+    socket.broadcast.to(prevroom).emit('user:left', {userId: data.userId});
 }
 
 function joinRoom(socket, data){
     socket.join(data.room);
     socket.emit('init', rooms[data.room]);
-    socket.broadcast.to(data.room).emit('user:join', {username: data.username});
-    rooms[data.room].push(data.username);
-    usersinfo[data.username] = data.room;
+    socket.broadcast.to(data.room).emit('user:join', {userId: data.userId});
+    rooms[data.room].push(data.userId);
+    usersinfo[data.userId] = data.room;
 }
 
 /////////////////////////////

@@ -1,12 +1,11 @@
 import React from 'react';
-import {Chatting} from 'components';
-import {StreamingPlayerContainer} from 'containers';
+import {StreamingPlayerContainer, ChattingContainer} from 'containers';
 
 const StreamingView = ({match})=>{ 
 	return (
 	<div>
 		<StreamingPlayerContainer streamName={match.params.streamname}/>
-		<Chatting room={match.params.streamname}/>
+		<ChattingContainer room={match.params.streamname}/>
 	</div>
 )}
 

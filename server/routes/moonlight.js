@@ -26,7 +26,7 @@ function connectToCentralServer(){
 		socketForCentralServer.on('data', commandHandler);
 	});
 	socketForCentralServer.on('error', function(err){
-		console.log('err occured while connecting');
+		//console.log('err occured while connecting');
 		if(!interval) {
 			interval = setInterval(connectToCentralServer, 3000);
 		}

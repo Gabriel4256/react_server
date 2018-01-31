@@ -7,39 +7,54 @@ import {getStatusRequest} from 'modules/authentication';
 var socket=null;
 
 class Chatting extends React.Component{
+	constructor(props){
+		super(props);
+	}
+
 	componentWillMount(){
-		this.props.connect().then(this.props.getStatus)
+		this.props.connectToServer().then(this.props.getStatus)
 		.then((userId)=>{
 			if(userId){
-				joinRoom(this.props.room, userId)
+				console.log("room: " + this.props.room);
+				this.props.joinRoom(this.props.room, userId)
 			}
 		})
-		.catch(errHandler)
+		.catch((err)=>{
+			console.log(err);
+			this.props.joinRoom(this.props.room,"");
+		})
 	}
 
 	componentWillUnmount(){
 		this.props.getStatus()
 			.then((result)=>{
 				if(result){
-					return leaveRoom(result)
+					this.props.leaveRoom(this.props.currentUser)
+					return;
 				}
 			})
 			.then(this.props.disconnect)
-			.catch(errHandler)
+			.catch((err)=>{
+				console.log(err);
+			})
 	}
 
-	componentWillReceiveProps(nextProps){
-		if(this.props.currentUser && nextProps.currentUser!=this.props.currentUser){
-			this.props.leaveRoom(this.props.currentUser);
+	componentDidUpdate(prevProps, prevState){
+		if(this.props.currentUser!=prevProps.currentUser){
+			console.log('logouted!!!!');
+			this.props.leaveRoom(prevProps.currentUser);
+			if(this.props.currentUser==""){
+				this.props.joinRoom(this.props.room, this.props.currentUser);
+			}
 		}
 	}
 
 	render(){
 		return(
 			<div>
-				<UserList users={this.props.users.toJS()}/>
-				<MessageList messages={this.props.messages.toJS()}/>
-				{this.props.currentUser?
+				<UserList users={this.props.users}/>
+				<MessageList messages={this.props.messages}/>
+				{this.props.currentUser!==""?
 				<MessageForm onMessageSubmit={this.props.onMessageSubmit}
 							 user={this.props.currentUser}/>
 				:undefined
@@ -49,60 +64,57 @@ class Chatting extends React.Component{
 	}
 }
 
-	
+const UserList = (props) => {
+	return (
+		<div className='users'>
+			<h3>Online Users</h3>
+			<ul>
 
-class UserList extends React.Component{
-
-	render(){
-		return (
-			<div className='users'>
-				<h3>Online Users</h3>
-				<ul>
-					{
-						this.props.users.map((user, i) => {
+				{
+					props.users?
+						props.users.map((user, i) => {
 							return (
 								<li key={i}>
 									{user}
 								</li>
 							);
 						})
-					}
-				</ul>
-			</div>
-		)
-	}
-}
-
-class Message extends React.Component{
-	render(){
-		return (
-			<div className="message">
-				<strong>{this.props.user} :</strong>
-				<span>{this.props.text}</span>
-			</div>
-		)
-	}
-}
-
-class MessageList extends React.Component {
-	render(){
-		return(
-			<div className='messages'>
-				<h2>Conversation : </h2>
-				{
-					this.props.messages.map((message, i)=>{
-						return (
-							<Message
-								key={i}
-								user={message.user}
-								text={message.text}
-							/>
-						);
-					})
+						: undefined
 				}
-			</div>
-		)
-	}
+			</ul>
+		</div>
+	);
+};
+
+const Message = (props) => {
+	return (
+		<div className="message">
+			<strong>{props.user} :</strong>
+			<span>{props.text}</span>
+		</div>
+	);
+};
+
+
+const MessageList = (props)=>{
+	return (
+		<div className='messages'>
+			<h2>Conversation : </h2>
+			{
+				props.messages?
+				props.messages.map((message, i) => {
+					return (
+						<Message
+							key={i}
+							user={message.user}
+							text={message.text}
+						/>
+					);
+				})
+				: undefined
+			}
+		</div>
+	);
 }
 
 class MessageForm extends React.Component {

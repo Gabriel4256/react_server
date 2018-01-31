@@ -78,6 +78,7 @@ io.sockets.on('connection', (socket) =>{
     });
 
     socket.on('send:message', (data)=>{
+        console.log("message has arrived" + JSON.stringify(data));
         socket.broadcast.to(data.room).emit("send:message", data.msg);
     });
 
@@ -93,20 +94,27 @@ function makeRoom(room){ //TODO: Change the way of storing the information => db
 }
 
 function leftRoom(socket, data){
-    let prevroom = usersinfo[data.userId];
-    console.log(data.userId + " has left from " + prevroom);
-    rooms[prevroom].splice(rooms[prevroom].indexOf(data.userId), 1);
-    usersinfo[data.userId]='';
-    socket.leave(prevroom);
-    socket.broadcast.to(prevroom).emit('user:left', {userId: data.userId});
+    if(data.userId!==""){
+        //let prevroom = usersinfo[data.userId];
+        console.log(data.userId + " has left from " + data.prevroom);
+        if(rooms[data.prevroom]){
+            rooms[data.prevroom].splice(rooms[data.prevroom].indexOf(data.userId), 1);
+        }
+        usersinfo[data.userId]='';
+        socket.broadcast.to(data.prevroom).emit('user:left', {userId: data.userId});
+    }
+    socket.leave(data.prevroom);
 }
 
 function joinRoom(socket, data){
+    console.log(data.userId + "is going to join the room " + data.room);
     socket.join(data.room);
-    socket.emit('init', rooms[data.room]);
-    socket.broadcast.to(data.room).emit('user:join', {userId: data.userId});
-    rooms[data.room].push(data.userId);
-    usersinfo[data.userId] = data.room;
+    socket.emit('init', {users: rooms[data.room], room: data.room});
+    if(data.userId!=""){
+        socket.broadcast.to(data.room).emit('user:join', {userId: data.userId});
+        rooms[data.room].push(data.userId);
+        usersinfo[data.userId] = data.room;
+    }
 }
 
 /////////////////////////////

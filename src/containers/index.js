@@ -6,7 +6,8 @@ import StreamingPlayerContainer from  './StreamingPlayerContainer';
 import SpeedTestContainer from './speedTestContainer';
 import StreamingListContainer from './StreamingListContainer'
 import MoonlightContainer from './MooonlightContainer';
-import asyncRoute from 'lib/asyncRoute';
+import ChattingContainer from './ChattingContainer';
+//import asyncRoute from 'lib/asyncRoute';
 
-export {HeaderContainer,Login,  StreamingView, Register, StreamingPlayerContainer, SpeedTestContainer, StreamingListContainer, MoonlightContainer};
-export const Login = asyncRoute(() =>import("containers/Login"))																
+export {HeaderContainer,Login,  StreamingView, Register, StreamingPlayerContainer, SpeedTestContainer, StreamingListContainer, MoonlightContainer, ChattingContainer};
+//export const Login = asyncRoute(() =>import("containers/Login"))																

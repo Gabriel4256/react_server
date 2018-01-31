@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import {connect} from 'react-redux';
 import {getStatusRequest} from 'modules/authentication';
 import update from 'immutability-helper';
+import {Chatting } from 'components';
 
 var socket={};
 
@@ -17,25 +18,29 @@ class ChattingContainer extends Component {
         this.onReceiveMsg = this.onReceiveMsg.bind(this);
         this.handleMessageSubmit = this.handleMessageSubmit.bind(this);        
         this.getStatus = this.getStatus.bind(this);
+        this.connectToIoServer = this.connectToIoServer.bind(this);
+        this.leaveRoom = this.leaveRoom.bind(this);
     }
 
     init(data) {
-        data.push(this.props.status.get('currentUser'));
+        console.log("init has been arrived");
+        data.users.push(this.props.status.get('currentUser'));
         this.setState({
-            users: data,
+            users: data.users,
             messages: [],
             text: [],
-            room: this.props.room,
+            room: data.room,
             currentUser: this.props.status.get('currentUser')
         });
     }
 
     connectToIoServer(){
         return Promise.resolve().then(()=>{
+            console.log("CONNECTIng to SERVER");
             socket = io.connect("http://localhost:4000", {'forceNew': true});
             socket.on('init', this.init);
             socket.on('send:message', this.onReceiveMsg);
-            socket.on('user:join', onUserJoin);
+            socket.on('user:join', this.onUserJoin);
             socket.on('user:left', this.onUserLeft);
             return true;
         })
@@ -54,12 +59,16 @@ class ChattingContainer extends Component {
     }
 
     leaveRoom(userId){
-        return Promise.resoleve().then(()=>{
-            return socket.emit('user:left', {userId})
+        return Promise.resolve().then(()=>{
+            socket.emit('user:left', {userId, prevroom: this.state.room})
+            return this.setState(update(this.state, {
+                room: {$set: ""}
+            }))
         })
     }
 
     onReceiveMsg(msg) {
+        console.log("send:message has arrived")
         this.setState(update(this.state, {
             messages: {$push : [msg]}    
         }));
@@ -86,11 +95,12 @@ class ChattingContainer extends Component {
     }
 
     handleMessageSubmit(msg) {
-        onReceiveMsg(msg);
+        this.onReceiveMsg(msg);
         socket.emit('send:message', { msg: msg, room: this.props.room });
     } 
 
     getStatus(){
+        console.log("get Stattus");
         return this.props.getStatusRequest()
                 .then(()=>{
                    if(this.props.status.get('valid')){
@@ -108,16 +118,17 @@ class ChattingContainer extends Component {
     render() {
         return (
             <div>
-                <Chatting room={this.state.get('room')}
-                          users={this.state.get('users')}
-                          messages={this.state.get('messages')}
+                <Chatting room={this.props.room}
+                          users={this.state.users}
+                          messages={this.state.messages}
                           onMessageSubmit={this.handleMessageSubmit}
-                          currentUser={this.props.currentUser}
-                          connect={this.connectToIoServer}
+                          currentUser={this.props.status.get('currentUser')}
+                          connectToServer={this.connectToIoServer}
                           disconnect={this.disconnectToIoServer}
                           joinRoom={this.joinRoom}
                           leaveRoom={this.leaveRoom}
-                          getStatus={this.getStatus}/>                        
+                          getStatus={this.getStatus}
+                          connected={this.state.connected}/>                        
             </div>
         );
     }

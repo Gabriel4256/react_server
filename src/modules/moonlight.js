@@ -44,7 +44,6 @@ const initialState = Map({
 })
 
 function getStatusApiRequest(userId){
-    console.log("AAAAAAA" + userId);
     return axios.post('/api/moonlight/getStatus', {userId})
         .then(res=>{
             if(res.data.error){
@@ -54,7 +53,7 @@ function getStatusApiRequest(userId){
         })
 }
 
-function getHostApiRequest(userId){
+function getHostsApiRequest(userId){
     return axios.post('/api/moonlight/gethosts', {userId})
         .then((res)=>{
             if(res.data.error){
@@ -114,9 +113,9 @@ export const getStatusRequest = (userId)=>({
     payload: getStatusApiRequest(userId)
 })
 
-export const getHostRequest = (userId)=>({
+export const getHostsRequest = (userId)=>({
     type: GET_HOSTS,
-    payload: getHostApiRequest(userId)
+    payload: getHostsApiRequest(userId)
 })
 
 export const getAppsRequest = (userId, hostId)=>({

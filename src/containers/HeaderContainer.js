@@ -16,12 +16,12 @@ class HeaderContainer extends React.Component{
 			()=> {
 				Materialize.toast('Good Bye!', 2000);
 
-				let loginData = {
+				/*let loginData = {
 					isLoggedIn: false,
 					username: ''
 				};
 
-				document.cookie = 'key=' + btoa(JSON.stringify(loginData));
+				document.cookie = 'key=' + btoa(JSON.stringify(loginData));*/
 			}
 		)
 	}
@@ -29,7 +29,7 @@ class HeaderContainer extends React.Component{
 
 
 	componentDidMount(){
-		function getCookie(name){
+		/*function getCookie(name){
 			var value = ";" + document.cookie;
 			var parts = value.split("; " + name + "=");
 			if(parts.length == 2) return parts.pop().split(";").shift();
@@ -41,7 +41,7 @@ class HeaderContainer extends React.Component{
 
 		loginData = JSON.parse(atob(loginData));
 
-		if(!loginData.isLoggedIn) return;
+		if(!loginData.isLoggedIn) return;*/
 
 		this.props.getStatusRequest().then(
 			()=> {

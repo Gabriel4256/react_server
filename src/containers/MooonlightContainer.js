@@ -54,6 +54,7 @@ class MoonlightContainer extends Component {
         )
     }
 
+    
     getHosts(userId){
         if(!this.state.isMoonlightOnline){
             return Promise.reject({error: "Moonlight is not online"})

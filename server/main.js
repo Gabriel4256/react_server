@@ -31,12 +31,12 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use('/api', api);
 app.use('/', express.static(path.join(__dirname, './../public')));
-app.get('*', (req, res)=>{
+app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, './../public/index.html'));
 });
-app.use(function(err, req, res, next) {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
+app.use(function (err, req, res, next) {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 
@@ -44,7 +44,7 @@ app.use(function(err, req, res, next) {
 server.listen(port, () => {
     console.log('Express is listening on port', port);
 });
-if(process.env.NODE_ENV == 'development') {
+if (process.env.NODE_ENV == 'development') {
     console.log('Server is running on development mode');
     const config = require('../webpack.dev.config');
     const compiler = webpack(config);
@@ -60,61 +60,119 @@ if(process.env.NODE_ENV == 'development') {
 ///////////////////////////////
 ///socket.io 설정 부분/////////
 var usersinfo = {};     //TODO: Store these two varibles into db
+var socketsinfo = {};
 var rooms = {};         // 
-io.sockets.on('connection', (socket) =>{
+io.sockets.on('connection', (socket) => {
     console.log("socket is connected");
     var currentUser = "";
-    socket.on('user:join', (data)=>{
-        console.log(data + " has joined");
+    socket.on('user:join', (data) => {
+        console.log(data.userId + " has joined to " + data.room);
         makeRoom(data.room);
-        if(usersinfo[data.userId]){
-            leftRoom(socket, data);
-        }
         joinRoom(socket, data);
+        logger();
     });
 
-    socket.on('user:left', (data)=>{
+    socket.on('user:left', (data) => {
         leftRoom(socket, data);
+        logger();
     });
 
-    socket.on('send:message', (data)=>{
+    socket.on('send:message', (data) => {
         console.log("message has arrived" + JSON.stringify(data));
         socket.broadcast.to(data.room).emit("send:message", data.msg);
+
     });
 
-    socket.on('disconnect', function(){
-        console.log("user disconnected");
+    socket.on('disconnect', function () {
+        var userId = socketsinfo[socket.id].userId;
+        var room = socketsinfo[socket.id].room;
+        if (socketsinfo[socket.id] && containsUser(room, userId) == 1) {
+            socket.broadcast.to(room).emit("left:room", { userId})
+        }
+        leftRoom(socket, userId);
+        delete socketsinfo[socket.id];
+        console.log("user: " + userId +   "disconnected from room: " + room);
+        logger();
     });
 });
 
-function makeRoom(room){ //TODO: Change the way of storing the information => db
-    if(!rooms[room]){
-        rooms[room] = [];
-    }    
+function logger(){
+    console.log(JSON.stringify(rooms));
+    console.log(JSON.stringify(usersinfo));
 }
 
-function leftRoom(socket, data){
-    if(data.userId!==""){
-        //let prevroom = usersinfo[data.userId];
-        console.log(data.userId + " has left from " + data.prevroom);
-        if(rooms[data.prevroom]){
-            rooms[data.prevroom].splice(rooms[data.prevroom].indexOf(data.userId), 1);
+function makeRoom(roomName) { //TODO: Change the way of storing the information => db
+    if (!rooms[roomName]) {
+        rooms[roomName] = [];
+    }
+}
+
+function leftRoom(socket, data) {
+    if (data.userId!=="") {
+        console.log(data.userId + " has left from " + data.room);
+        if (containsUser(data.room, data.userId) == 1) {
+            socket.broadcast.to(data.room).emit('user:left', { userId: data.userId });
         }
-        usersinfo[data.userId]='';
-        socket.broadcast.to(data.prevroom).emit('user:left', {userId: data.userId});
     }
-    socket.leave(data.prevroom);
+    rooms[data.room].splice(rooms[data.room].indexOf(socket.id), 1);
+    socket.leave(data.room);
+    socketsinfo[socket.id].room = "";
+
 }
 
-function joinRoom(socket, data){
-    console.log(data.userId + "is going to join the room " + data.room);
-    socket.join(data.room);
-    socket.emit('init', {users: rooms[data.room], room: data.room});
-    if(data.userId!=""){
-        socket.broadcast.to(data.room).emit('user:join', {userId: data.userId});
-        rooms[data.room].push(data.userId);
-        usersinfo[data.userId] = data.room;
+function joinRoom(socket, data) {
+
+    if(data.userId!==""){
+        console.log(data.userId + "is going to join the room " + data.room);
+        console.log("#1: " + socket.id)
     }
+    socket.join(data.room);
+    socketsinfo[socket.id] = { room: data.room, userId: data.userId };
+    rooms[data.room].push(socket.id);
+    socket.emit('init', { users: getPureUserList(data.room), room: data.room });
+    if (data.userId != "") {
+        if (containsUser(data.room, data.userId) == 0) {
+            socket.broadcast.to(data.room).emit('user:join', { userId: data.userId });
+        }
+    }
+
+}
+
+function containsUser(roomName, userId) {
+    if (roomName != "") {
+        var tmp = rooms[roomName].filter((socketId, index) => {
+            console.log(JSON.stringify(socketsinfo));
+            return socketsinfo[socketId].userId == userId
+        })
+        return tmp.length;
+    }
+    return -1;
+}
+
+function getPureUserList(roomName) {
+    if(rooms[roomName].length==0){
+        return [];
+    }
+    return getUniqueObjectArray(getUsersFromSocketIdArray(getSocketsIn(roomName)));
+}
+
+function getSocketsIn(roomName) {
+    console.log(roomName + " : " + JSON.stringify(rooms[roomName]));
+    return rooms[roomName];
+}
+
+function getUsersFromSocketIdArray(SocketIdArray) {
+    return SocketIdArray.map((socketId, index, array) => {
+        return socketsinfo[socketId].userId;
+    })
+}
+
+function getUniqueObjectArray(array) {
+    return array.filter((item, i) => {
+        return array.findIndex((item2, j) => {
+            return item === item2;
+        }) === i && item != "";
+    });
 }
 
 /////////////////////////////

@@ -1,63 +1,67 @@
 import React from 'react';
 import update from 'react-addons-update';
 import io from 'socket.io-client';
-import {connect} from 'react-redux';
-import {getStatusRequest} from 'modules/authentication';
+import { connect } from 'react-redux';
+import { getStatusRequest } from 'modules/authentication';
 
-var socket=null;
+var socket = null;
 
-class Chatting extends React.Component{
-	constructor(props){
+class Chatting extends React.Component {
+	constructor(props) {
 		super(props);
 	}
 
-	componentWillMount(){
+	componentWillMount() {
 		this.props.connectToServer().then(this.props.getStatus)
-		.then((userId)=>{
-			if(userId){
-				console.log("room: " + this.props.room);
-				this.props.joinRoom(this.props.room, userId)
-			}
-		})
-		.catch((err)=>{
-			console.log(err);
-			this.props.joinRoom(this.props.room,"");
-		})
+			.then((userId) => {
+				if (userId) {
+					console.log("room: " + this.props.room);
+					this.props.joinRoom(this.props.room, userId)
+				}
+			})
+			.catch((err) => {
+				console.log(err);
+				this.props.joinRoom(this.props.room, "");
+			})
 	}
 
-	componentWillUnmount(){
-		this.props.getStatus()
-			.then((result)=>{
-				if(result){
+	componentWillUnmount() {
+		/*this.props.getStatus()
+			.then((result) => {
+				if (result) {
 					this.props.leaveRoom(this.props.currentUser)
 					return;
 				}
 			})
 			.then(this.props.disconnect)
-			.catch((err)=>{
+			.catch((err) => {
+				console.log(err);
+			})*/
+			this.props.leaveRoom(this.props.currentUser).then(this.props.disconnect)
+			.catch(err=>{
 				console.log(err);
 			})
 	}
 
-	componentDidUpdate(prevProps, prevState){
-		if(this.props.currentUser!=prevProps.currentUser){
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.currentUser != prevProps.currentUser && prevProps.currentUser!=="") {
 			console.log('logouted!!!!');
 			this.props.leaveRoom(prevProps.currentUser);
-			if(this.props.currentUser==""){
+			if (this.props.currentUser == "") {
 				this.props.joinRoom(this.props.room, this.props.currentUser);
 			}
 		}
 	}
 
-	render(){
-		return(
+	render() {
+		return (
 			<div>
-				<UserList users={this.props.users}/>
-				<MessageList messages={this.props.messages}/>
-				{this.props.currentUser!==""?
-				<MessageForm onMessageSubmit={this.props.onMessageSubmit}
-							 user={this.props.currentUser}/>
-				:undefined
+				<UserList users={this.props.users} />
+				<MessageList messages={this.props.messages} />
+				{this.props.currentUser !== "" ?
+					<MessageForm onMessageSubmit={this.props.onMessageSubmit}
+						user={this.props.currentUser} />
+					: undefined
 				}
 			</div>
 		)
@@ -71,7 +75,7 @@ const UserList = (props) => {
 			<ul>
 
 				{
-					props.users?
+					props.users ?
 						props.users.map((user, i) => {
 							return (
 								<li key={i}>
@@ -96,22 +100,22 @@ const Message = (props) => {
 };
 
 
-const MessageList = (props)=>{
+const MessageList = (props) => {
 	return (
 		<div className='messages'>
 			<h2>Conversation : </h2>
 			{
-				props.messages?
-				props.messages.map((message, i) => {
-					return (
-						<Message
-							key={i}
-							user={message.user}
-							text={message.text}
-						/>
-					);
-				})
-				: undefined
+				props.messages ?
+					props.messages.map((message, i) => {
+						return (
+							<Message
+								key={i}
+								user={message.user}
+								text={message.text}
+							/>
+						);
+					})
+					: undefined
 			}
 		</div>
 	);
@@ -119,9 +123,9 @@ const MessageList = (props)=>{
 
 class MessageForm extends React.Component {
 
-	constructor(props){
+	constructor(props) {
 		super(props);
-		this.state={
+		this.state = {
 			text: '',
 			isAuth: false
 		};
@@ -130,32 +134,32 @@ class MessageForm extends React.Component {
 
 	}
 
-	handleSubmit(e){
+	handleSubmit(e) {
 		e.preventDefault();
 		var message = {
 			user: this.props.user,
 			text: this.state.text
 		};
 		this.props.onMessageSubmit(message);
-		this.setState({text: ''});
+		this.setState({ text: '' });
 	}
 
-	handleChange(e){
-		this.setState({text: e.target.value});
+	handleChange(e) {
+		this.setState({ text: e.target.value });
 	}
 
-	render(){
-		return(
+	render() {
+		return (
 			<div className='message_form'>
 				<h3>Write new Message</h3>
 				{
 					<form onSubmit={this.handleSubmit}>
-					{
-						<input
-							onChange={this.handleChange}
-							value={this.state.text}
-						/>
-					}
+						{
+							<input
+								onChange={this.handleChange}
+								value={this.state.text}
+							/>
+						}
 					</form>
 				}
 			</div>
@@ -164,16 +168,16 @@ class MessageForm extends React.Component {
 
 }
 
-const mapStateToProps = (state) =>{
-	return{
+const mapStateToProps = (state) => {
+	return {
 		status: state.authentication.status
 	};
 };
 
 const mapDispatchtoProps = (dispatch) => {
 	return {
-		getStatusRequest: ()=> {
-			return  dispatch(getStatusRequest());
+		getStatusRequest: () => {
+			return dispatch(getStatusRequest());
 		}
 	};
 }

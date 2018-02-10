@@ -24,7 +24,6 @@ class ChattingContainer extends Component {
 
     init(data) {
         console.log("init has been arrived");
-        //data.users.push(this.props.status.get('currentUser'));
         this.setState({
             users: data.users,
             messages: [],
@@ -95,7 +94,7 @@ class ChattingContainer extends Component {
     }
 
     handleMessageSubmit(msg) {
-        this.onReceiveMsg(msg);
+        //this.onReceiveMsg(msg);
         socket.emit('send:message', { msg: msg, room: this.props.room });
     }
 
@@ -103,15 +102,12 @@ class ChattingContainer extends Component {
         console.log("get Stattus");
         return this.props.getStatusRequest()
             .then(() => {
-                if (this.props.status.get('valid')) {
                     this.setState(update(this.state, {
                         currentUser: {
                             $set: this.props.status.get('currentUser')
                         }
                     }))
                     return this.state.currentUser;
-                }
-                return Promise.reject(false);
             })
     }
 

@@ -1,7 +1,6 @@
 import React from 'react';
 
 const SpeedTest = (props)=>{
-	props = props.toJS();
 	return(
 	<div>
 		{props.status}

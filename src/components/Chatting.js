@@ -14,10 +14,8 @@ class Chatting extends React.Component {
 	componentWillMount() {
 		this.props.connectToServer().then(this.props.getStatus)
 			.then((userId) => {
-				if (userId) {
 					console.log("room: " + this.props.room);
 					this.props.joinRoom(this.props.room, userId)
-				}
 			})
 			.catch((err) => {
 				console.log(err);
@@ -26,30 +24,17 @@ class Chatting extends React.Component {
 	}
 
 	componentWillUnmount() {
-		/*this.props.getStatus()
-			.then((result) => {
-				if (result) {
-					this.props.leaveRoom(this.props.currentUser)
-					return;
-				}
-			})
-			.then(this.props.disconnect)
-			.catch((err) => {
-				console.log(err);
-			})*/
-			this.props.leaveRoom(this.props.currentUser).then(this.props.disconnect)
-			.catch(err=>{
-				console.log(err);
-			})
+		this.props.getStatus().then((result)=>{
+			return this.props.leaveRoom(result);
+		}).then(this.props.disconnect)
+		.catch(err=>{console.log(err)})
 	}
 
-	componentDidUpdate(prevProps, prevState) {
-		if (this.props.currentUser != prevProps.currentUser && prevProps.currentUser!=="") {
+	componentWillUpdate(nextProps, nextState) {
+		if (this.props.currentUser != nextProps.currentUser && this.props.currentUser!=="") {
 			console.log('logouted!!!!');
-			this.props.leaveRoom(prevProps.currentUser);
-			if (this.props.currentUser == "") {
-				this.props.joinRoom(this.props.room, this.props.currentUser);
-			}
+			this.props.leaveRoom(this.props.currentUser);
+			this.props.joinRoom(nextProps.room, nextProps.currentUser);
 		}
 	}
 
@@ -75,7 +60,7 @@ const UserList = (props) => {
 			<ul>
 
 				{
-					props.users ?
+					props.users.map?
 						props.users.map((user, i) => {
 							return (
 								<li key={i}>

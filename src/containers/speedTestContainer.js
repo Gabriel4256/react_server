@@ -17,7 +17,7 @@ class speedTestContainer extends Component {
         return this.props.getSpeedRequest()
             .then(()=>{
                 if(this.props.status === "SUCCESS"){
-                    this.setState({data:this.props.data})
+                    this.setState({data:this.props.data.toJS()})
                     return true;
                 }
                 return Promise.reject(false);

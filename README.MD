@@ -4,7 +4,7 @@
 
 Dev branch contains unstable build including several experimental implementation, So download master branch for testing!
 React-Web-Server is a live streaming app implemented using React.js, Redux, Express.js
-Central-Server is a tcp Server controlling communication between React-Web-Server & CONNETO
+Central-Server is a tcp Server controlling communication between React-Web-Server & [CONNETO](https://github.com/twice154/CONNETO)
 
 ## Features
 React-Web-Server

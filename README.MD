@@ -7,10 +7,15 @@ React-Web-Server is a live streaming app implemented using React.js, Redux, Expr
 Central-Server is a tcp Server controlling communication between React-Web-Server & [CONNETO](https://github.com/twice154/CONNETO)
 
 ## Features
+
+Frontend: React
+Backend: node.js
+
 React-Web-Server
 - Authentication (Sign Up / Sign In)
 - View Streaming & Chatting
 - CONNETO Control Interface
+
 
 ## Following technologies are used
 - axios
